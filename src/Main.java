@@ -1,22 +1,22 @@
 import java.util.Scanner;
+
 public class Main {
     final static Scanner scanner = new Scanner(System.in);
-    String[][] xMoves = new String[3][3]; //array to store X's and O's
-    String[] cases = new String[8]; //array to store possible cases of the field
-
+    static String[][] newMove = new String[][]{{"_", "_", "_"}, {"_", "_", "_"}, {"_", "_", "_"}}; //empty field
+    static String[] cases = new String[8]; //array to store possible cases of the field
 
     // draw board
-    public void draw () {
+    public static void draw () {
         System.out.println("---------");
-        System.out.println("| " + xMoves[0][0] + " " + xMoves[0][1] + " " + xMoves[0][2] + " |") ;
-        System.out.println("| " + xMoves[1][0] + " " + xMoves[1][1] + " " + xMoves[1][2] + " |") ;
-        System.out.println("| " + xMoves[2][0] + " " + xMoves[2][1] + " " + xMoves[2][2] + " |") ;
+        System.out.println("| " + newMove[0][0] + " " + newMove[0][1] + " " + newMove[0][2] + " |") ;
+        System.out.println("| " + newMove[1][0] + " " + newMove[1][1] + " " + newMove[1][2] + " |") ;
+        System.out.println("| " + newMove[2][0] + " " + newMove[2][1] + " " + newMove[2][2] + " |") ;
         System.out.println("---------");
     }
     // check if numbers
-    public String[] ifNumers (){
-        int xCoord = 0;
-        int yCoord = 0;
+    public static String[] ifNumers (){
+        int xCoord;
+        int yCoord;
         String[] coords = {"0", "0"};
         boolean enteredNumbers = false;
         while(!enteredNumbers) {
@@ -28,13 +28,12 @@ public class Main {
                 enteredNumbers = true;
             } catch (NumberFormatException e) {
                 System.out.println("You should enter numbers!");
-                continue;
             }
         }
         return coords;
     }
     // check if valid coordinates
-    public String[] validCoords(String[]coords) {
+    public static String[] validCoords(String[]coords) {
         int xCoord = Integer.parseInt(coords[0]);
         int yCoord = Integer.parseInt(coords[1]);
         while (xCoord < 1 || xCoord > 3 || yCoord < 1 || yCoord > 3){
@@ -47,7 +46,7 @@ public class Main {
         return coords;
     }
     // user enters coordinates
-    public void nextMove () {
+    public static int[] nextMove () {
         String[] coords = ifNumers();
         coords = validCoords(coords);
         int xCoord = Integer.parseInt(coords[0]);
@@ -56,7 +55,7 @@ public class Main {
         int temp = xCoord;
         xCoord = 3- yCoord;
         yCoord = temp - 1; // first convert coordinates to array indexes
-        while (!(xMoves[xCoord][yCoord]).equals("_")){
+        while (!(newMove[xCoord][yCoord]).equals("_")){
             System.out.println("This cell is occupied! Choose another one!");
             System.out.println("Enter the coordinates:");
             coords = ifNumers(); //make sure users inputs numbers
@@ -68,86 +67,77 @@ public class Main {
             xCoord = 3- yCoord;
             yCoord = temp - 1;
         }
-        xMoves[xCoord][yCoord] = "X"; // X makes a move
+        int[] xy = {xCoord, yCoord};
+        return xy;
     }
 
-    // check if field has a lot more X's than O's or vice versa. the difference should be 1 or 0
-    public boolean moreOnOneSide (String gameSymbols) {
-        int numOfX = 0;
-        int numOfO = 0;
-        for (int i = 0; i < gameSymbols.length(); i++) {
-            if (gameSymbols.charAt(i) == 'X') {
-                numOfX += 1;
-            } else if (gameSymbols.charAt(i) == 'O')
-                numOfO += 1;
+    // game starts, ask for user inputs
+    public static void gameStarts () {
+        boolean hasWinner = false;
+        int numOfMoves = 1;
+        while (!hasWinner){ //no winner, keep going
+            System.out.println("Enter the coordinates:");
+            int[] xy = nextMove(); //ask for input
+            int xCoord = xy[0];
+            int yCoord = xy[1]; // get x and y coordinates from user input
+            if (numOfMoves % 2 == 0) {  // an even number of moves means O moves
+                newMove[xCoord][yCoord] = "O"; // O makes a move
+            } else { // an odd number of moves means X moves
+                newMove[xCoord][yCoord] = "X"; // X makes a move
+            }
+            draw(); //draw the field after X/O makes a move
+            hasWinner = gameResults(); //do we have a winner?
+            if (hasWinner) {
+                System.exit(1); //if yes, exit the game
+            } else numOfMoves ++; //if no, keep going
         }
-        if ((numOfO - numOfX) >1 || (numOfX - numOfO) >1) {
-            return false;
-        } else return true;
     }
-    // print game results
-    public void gameResults (String gameSymbols) {
-        int countX= 0; // # of occurrences of having 3 X's in a row
+
+    // check if we have a winner
+    public static boolean gameResults () {
+        String case0 = (newMove[0][0].concat(newMove[0][1])).concat(newMove[0][2]);
+        String case1 = (newMove[1][0].concat(newMove[1][1])).concat(newMove[1][2]);
+        String case2 = (newMove[2][0].concat(newMove[2][1])).concat(newMove[2][2]);
+        String case3 = (newMove[0][0].concat(newMove[1][0])).concat(newMove[2][0]);
+        String case4 = (newMove[0][1].concat(newMove[1][1])).concat(newMove[2][1]);
+        String case5 = (newMove[0][2].concat(newMove[1][2])).concat(newMove[2][2]);
+        String case6 = (newMove[0][0].concat(newMove[1][1])).concat(newMove[2][2]);
+        String case7 = (newMove[0][2].concat(newMove[1][1])).concat(newMove[2][0]);
+        cases = new String[]{case0, case1, case2, case3, case4, case5, case6, case7}; //possible cases
+
+        int countX = 0; // # of occurrences of having 3 X's in a row
         int countO = 0; // # of occurrences of having 3 O's in a row
         for (int i = 0; i < 8; i++) {
-            if (cases[i].equalsIgnoreCase("XXX")) {
+            if (cases[i].equals("XXX")) {
                 countX += 1;
-            } else if (cases[i].equalsIgnoreCase("OOO")) {
+            } else if (cases[i].equals("OOO")) {
                 countO += 1;
             }
         }
-        if (!moreOnOneSide(gameSymbols)){
-            System.out.println("Impossible");
-            System. exit(1);
+        // count the # of empty cells left
+        int count_ = 0;
+        for (int k = 0; k < 3; k++) {
+            for (int j = 0; j < 3; j++) {
+                if (newMove[k][j] == "_"){
+                    count_++;
+                }
+            }
         }
-        if (countX == 0 && countO == 0 && !gameSymbols.contains("_")) {
+
+        if (countX == 0 && countO == 0 && count_ == 0) {
             System.out.println("Draw"); //when no side has a 3 in a row and field has no empty cells
-        } else if (countO !=0 && countX != 0) {
-            System.out.println("Impossible"); //when the field has both 3 X's and 3 O's in a row
-        } else if (countX == 0 && countO == 0 && gameSymbols.contains("_")){
-            System.out.println("Game not finished"); //when no side has a 3 in a row but field has empty cells
-        } else if (countX != 0) {
+            return true; // true means game is finished
+        }  else if (countX != 0) {
             System.out.println("X wins"); //3 X's in a row
+            return true;
         } else if (countO != 0) {
             System.out.println("O wins"); //3 O's in a row
-        }
-    }
-
-    // establish board
-    public Main(String gameSymbols) {
-        String case0 = gameSymbols.substring(0,3);
-        String case1 = gameSymbols.substring(3,6);
-        String case2 = gameSymbols.substring(6,9);
-        String case3 = gameSymbols.valueOf(gameSymbols.charAt(0)) + gameSymbols.valueOf(gameSymbols.charAt(3)) +
-                gameSymbols.valueOf(gameSymbols.charAt(6));
-        String case4 = gameSymbols.valueOf(gameSymbols.charAt(1)) + gameSymbols.valueOf(gameSymbols.charAt(4)) +
-                gameSymbols.valueOf(gameSymbols.charAt(7));
-        String case5 = gameSymbols.valueOf(gameSymbols.charAt(2)) + gameSymbols.valueOf(gameSymbols.charAt(5)) +
-                gameSymbols.valueOf(gameSymbols.charAt(8));
-        String case6 = gameSymbols.valueOf(gameSymbols.charAt(0)) + gameSymbols.valueOf(gameSymbols.charAt(4)) +
-                gameSymbols.valueOf(gameSymbols.charAt(8));
-        String case7 = gameSymbols.valueOf(gameSymbols.charAt(2)) + gameSymbols.valueOf(gameSymbols.charAt(4)) +
-                gameSymbols.valueOf(gameSymbols.charAt(6));
-        cases = new String[]{case0, case1, case2, case3, case4, case5, case6, case7}; //possible cases
-
-        int initialIndex = 0; //use this to go through user's string input
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                xMoves[i][j] = gameSymbols.valueOf(gameSymbols.charAt(initialIndex));
-                initialIndex ++;
-            }
-
-        }
+            return true;
+        } else return false; // false means game continues
     }
 
     public static void main(String[] args) {
-        System.out.println("Enter cells:");
-        String gameBoard = scanner.nextLine();
-        Main game1 = new Main(gameBoard);
-        game1.draw();
-        System.out.println("Enter the coordinates:");
-        game1.nextMove();
-        game1.draw();
-        //game1.gameResults(gameBoard);
+        draw();
+        gameStarts();
     }
 }
